@@ -2,7 +2,7 @@
 
 ## O que faz
 
-Cada e-mail novo que chega na caixa de entrada é classificado por um LLM em uma de cinco categorias (**urgente**, **trabalho**, **financeiro/cobrança**, **newsletter** ou **outros**) e recebe a etiqueta correspondente no Gmail. Se for urgente, também chega um alerta no Telegram com remetente, assunto e um trecho do texto.
+Cada e-mail novo que chega na caixa de entrada é classificado por um LLM em uma de cinco categorias (**urgente**, **pessoal**, **financeiro/cobrança**, **newsletter** ou **outros**) e recebe a etiqueta correspondente no Gmail. Se for urgente, também chega um alerta no Telegram com remetente, assunto e um trecho do texto.
 
 ## Como meu dia ficou melhor
 
@@ -21,7 +21,7 @@ Eu recebo muito e-mail que não precisa de atenção nenhuma (newsletter, promo�
 - Conta Google com Gmail (credencial OAuth2 no n8n)
 - Chave de API da [Anthropic](https://console.anthropic.com/) (dá para usar outro provedor, veja abaixo)
 - Bot do Telegram e o seu chat ID
-- Cinco etiquetas criadas no Gmail, por exemplo: `IA/Urgente`, `IA/Trabalho`, `IA/Financeiro`, `IA/Newsletter`, `IA/Outros`
+- Cinco etiquetas criadas no Gmail, por exemplo: `IA/Urgente`, `IA/Pessoal`, `IA/Financeiro`, `IA/Newsletter`, `IA/Outros`
 
 > **Privacidade:** o conteúdo dos e-mails é enviado para o provedor do LLM. Se isso for um problema, troque o modelo por um local (ex.: nó *Ollama Chat Model*) ou envie só remetente e assunto.
 
@@ -38,7 +38,7 @@ Eu recebo muito e-mail que não precisa de atenção nenhuma (newsletter, promo�
    | Onde | Placeholder | Trocar por |
    |---|---|---|
    | **Etiqueta urgente** | `ID_ETIQUETA_URGENTE` | etiqueta `IA/Urgente` |
-   | **Etiqueta trabalho** | `ID_ETIQUETA_TRABALHO` | etiqueta `IA/Trabalho` |
+   | **Etiqueta pessoal** | `ID_ETIQUETA_PESSOAL` | etiqueta `IA/Pessoal` |
    | **Etiqueta financeiro** | `ID_ETIQUETA_FINANCEIRO` | etiqueta `IA/Financeiro` |
    | **Etiqueta newsletter** | `ID_ETIQUETA_NEWSLETTER` | etiqueta `IA/Newsletter` |
    | **Etiqueta outros** | `ID_ETIQUETA_OUTROS` | etiqueta `IA/Outros` |
@@ -57,5 +57,5 @@ Eu recebo muito e-mail que não precisa de atenção nenhuma (newsletter, promo�
 - Arquivar automaticamente as newsletters (tirar a etiqueta `INBOX`) para a caixa de entrada ficar só com o que importa.
 - No ramo financeiro, extrair valor e vencimento do boleto e criar um lembrete no calendário.
 - Criar uma lista de remetentes VIP que sempre caem em "urgente", sem passar pela IA.
-- Gerar um rascunho de resposta para e-mails de trabalho (nó Gmail → *Create Draft*).
+- Gerar um rascunho de resposta para e-mails pessoais (nó Gmail → *Create Draft*).
 - Mandar um resumo diário no Telegram com quantos e-mails chegaram em cada categoria.

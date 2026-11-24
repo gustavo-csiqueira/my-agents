@@ -42,11 +42,11 @@
           "categories": [
             {
               "category": "urgente",
-              "description": "Precisa da minha ação hoje: prazos curtos, problemas em produção, pedidos diretos e importantes de pessoas reais, alertas de segurança da minha conta."
+              "description": "Precisa da minha ação hoje: prazos curtos, pedidos diretos e importantes de pessoas reais, alertas de segurança da minha conta."
             },
             {
-              "category": "trabalho",
-              "description": "Assuntos profissionais que não são urgentes: reuniões, projetos, colegas, clientes, recrutadores."
+              "category": "pessoal",
+              "description": "Mensagens de pessoas reais que não são urgentes: amigos, família, convites, conversas e combinados."
             },
             {
               "category": "financeiro",
@@ -130,11 +130,11 @@
         "operation": "addLabels",
         "messageId": "={{ $('Novo e-mail').item.json.id }}",
         "labelIds": [
-          "ID_ETIQUETA_TRABALHO"
+          "ID_ETIQUETA_PESSOAL"
         ]
       },
-      "id": "cc5450ce-875c-5614-b7cf-d44905ffd0ac",
-      "name": "Etiqueta trabalho",
+      "id": "42b235dc-d5df-5872-ba1d-677ede44b26b",
+      "name": "Etiqueta pessoal",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
@@ -277,7 +277,7 @@
     },
     {
       "parameters": {
-        "content": "### 🏷️ Etiquetas\nCrie no Gmail as etiquetas (ex.: `IA/Urgente`, `IA/Trabalho`, `IA/Financeiro`, `IA/Newsletter`, `IA/Outros`) e selecione cada uma no nó correspondente, no lugar de `ID_ETIQUETA_*`.",
+        "content": "### 🏷️ Etiquetas\nCrie no Gmail as etiquetas (ex.: `IA/Urgente`, `IA/Pessoal`, `IA/Financeiro`, `IA/Newsletter`, `IA/Outros`) e selecione cada uma no nó correspondente, no lugar de `ID_ETIQUETA_*`.",
         "height": 1060,
         "width": 240
       },
@@ -340,7 +340,7 @@
         ],
         [
           {
-            "node": "Etiqueta trabalho",
+            "node": "Etiqueta pessoal",
             "type": "main",
             "index": 0
           }

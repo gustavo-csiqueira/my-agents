@@ -37,7 +37,7 @@ Se ninguém faz aniversário amanhã, o fluxo termina no filtro e nada é enviad
 | nome | data_nascimento | observacao |
 |------|-----------------|------------|
 | Maria | 25/11/1992 | prima, mora em BH |
-| João | 03/02 | colega do trabalho |
+| João | 03/02 | amigo de infância |
 
 > Use o formato **dd/mm/aaaa** (ou **dd/mm** quando não souber o ano). Para evitar conversões de data, formate a coluna `data_nascimento` como **Texto simples** (*Formatar → Número → Texto simples*).
 

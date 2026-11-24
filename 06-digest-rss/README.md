@@ -94,7 +94,7 @@ Domingo 9h → Configuração → Separar feeds → Ler feed RSS → Normalizar 
 
 ```json
 [
-  { "nome": "Blog da Empresa X", "url": "https://exemplo.com/feed" },
+  { "nome": "Blog X",            "url": "https://exemplo.com/feed" },
   { "nome": "Newsletter Y",      "url": "https://exemplo.substack.com/feed" },
   { "nome": "Canal Z (YouTube)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=ID_DO_CANAL" }
 ]

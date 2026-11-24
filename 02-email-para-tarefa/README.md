@@ -46,5 +46,5 @@ Minha caixa de entrada funcionava como lista de tarefas, o que é péssimo: e-ma
 
 - Usar **Todoist** no lugar do Notion (nó Todoist → *Create Task*), colocando o link na descrição.
 - Preencher uma data de vencimento automática (ex.: daqui a 2 dias úteis).
-- Usar etiquetas diferentes para projetos diferentes (`fazer/trabalho`, `fazer/casa`) e mandar para bancos diferentes com um nó **Switch**.
-- Pedir a um LLM para reescrever o assunto como uma ação ("Responder orçamento do fornecedor X").
+- Usar etiquetas diferentes para áreas diferentes (`fazer/casa`, `fazer/estudos`) e mandar para bancos diferentes com um nó **Switch**.
+- Pedir a um LLM para reescrever o assunto como uma ação ("Responder um amigo sobre a viagem").

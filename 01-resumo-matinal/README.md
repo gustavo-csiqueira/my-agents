@@ -11,23 +11,23 @@ Todo dia às 7h (horário de Brasília) junta os eventos do dia no Google Calend
    mín 18°C · máx 27°C · umidade 70%
 
 📅 Agenda (2)
-   • 09:30 — Daily do time
+   • 09:30 — Academia
    • 14:00 — Dentista (Rua Exemplo, 123)
 
 ✅ Tarefas (3) · ⚠️ 1 atrasada(s)
-   ▶️ Ler os 3 papers do projeto
-      🔴 Urgent · ⭐ Important · 🧩 LONG TERM · ⚠️ venceu 15/11
-   • Responder orçamento do fornecedor
-      ⭐ Important · 🧩 QUICK WIN · ⏰ vence hoje
-   ▶️ Refatorar o módulo de relatórios
-      🧩 HARD · 📅 até 05/12
+   ▶️ Responder a mensagem de um amigo
+      🔴 Urgent · ⭐ Important · 🧩 QUICK WIN · ⚠️ venceu 15/11
+   • Pagar a conta de luz
+      ⭐ Important · 🧩 EASY · ⏰ vence hoje
+   ▶️ Organizar as fotos da viagem
+      🧩 LONG TERM · 📅 até 05/12
 ```
 
 Cada título é um link para a página da tarefa no Notion, e ▶️ marca o que já está em andamento.
 
 ## Como meu dia ficou melhor
 
-Eu começava o dia abrindo três apps diferentes ainda na cama: agenda, previsão do tempo e lista de tarefas. Às vezes pulava algum e só descobria a reunião das 9h às 8h50. Agora leio uma mensagem só enquanto tomo café e já sei se preciso de guarda-chuva, que horas tenho compromisso e o que ficou atrasado de ontem. Parece pouco, mas o início do dia ficou bem mais tranquilo e parei de ser pego de surpresa pela agenda.
+Eu começava o dia abrindo três apps diferentes ainda na cama: agenda, previsão do tempo e lista de tarefas. Às vezes pulava algum e só lembrava do compromisso das 9h às 8h50. Agora leio uma mensagem só enquanto tomo café e já sei se preciso de guarda-chuva, que horas tenho compromisso e o que ficou atrasado de ontem. Parece pouco, mas o início do dia ficou bem mais tranquilo e parei de ser pego de surpresa pela agenda.
 
 ## Como funciona
 
@@ -105,6 +105,6 @@ Se o seu banco for diferente, é só ajustar o nó **Configuração do Notion**.
 - Trocar o Notion pelo nó do **Todoist** (*Get Many* com o filtro `today | overdue`) se você usa o Todoist.
 - Incluir também as tarefas da semana que vem numa seção "No radar".
 - Usar o endpoint `/forecast` para mostrar a chance de chuva ao longo do dia.
-- Incluir mais de uma agenda (trabalho + pessoal) duplicando o nó do Calendar.
-- Mandar uma versão diferente no fim de semana, sem tarefas de trabalho.
+- Incluir mais de uma agenda (ex.: pessoal + família) duplicando o nó do Calendar.
+- Mandar uma versão mais curta no fim de semana, ou não mandar nada.
 - Acrescentar a cotação do dólar ou as manchetes do dia com mais um HTTP Request.
