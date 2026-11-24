@@ -1,0 +1,498 @@
+{
+  "name": "01 - Resumo matinal",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "7a65b1ef-fa16-5119-85e6-73b2a65cefb6",
+      "name": "Todo dia às 7h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a696a1a4-f8c5-52fc-8f05-3631a07dc3c4",
+              "name": "cidade",
+              "value": "Sao Paulo,BR",
+              "type": "string"
+            },
+            {
+              "id": "08385471-9376-59c0-95d4-822958b81b5d",
+              "name": "chat_id",
+              "value": "SEU_CHAT_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "93a7dc2b-ace2-5765-99ac-fd1175b091f1",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96b4c0b2-b100-5a03-9789-a1375fb09349",
+              "name": "banco_id",
+              "value": "ID_DO_BANCO_NOTION",
+              "type": "string"
+            },
+            {
+              "id": "425f64f6-2294-58f7-8212-077b77275be9",
+              "name": "colunas",
+              "value": "{\n  \"titulo\": \"Task Name\",\n  \"status\": \"Status\",\n  \"prazo\": \"Deadline\",\n  \"urgencia\": \"Urgency\",\n  \"relevancia\": \"Relevance\",\n  \"complexidade\": \"Complexity\"\n}",
+              "type": "object"
+            },
+            {
+              "id": "d6df75cd-a1b9-5e9f-93df-a01c3f6b0c2a",
+              "name": "status_concluidos",
+              "value": "[\"Complete\", \"Archieved\"]",
+              "type": "array"
+            },
+            {
+              "id": "73eb9ce8-8fdc-54fe-9afd-d8a326f1df73",
+              "name": "status_em_andamento",
+              "value": "Doing",
+              "type": "string"
+            },
+            {
+              "id": "763ad676-abde-56fe-80f8-01afa37d1bec",
+              "name": "valor_urgente",
+              "value": "Urgent",
+              "type": "string"
+            },
+            {
+              "id": "d578cd86-eb41-5c2e-8bc1-b16ef6254a35",
+              "name": "valor_importante",
+              "value": "Important",
+              "type": "string"
+            },
+            {
+              "id": "d123e249-9614-5078-89df-ab0cee0583c0",
+              "name": "valores_padrao",
+              "value": "{\n  \"status\": \"To Do\",\n  \"urgencia\": \"\",\n  \"relevancia\": \"\",\n  \"complexidade\": \"\"\n}",
+              "type": "object"
+            },
+            {
+              "id": "917b7448-7810-5c24-b4c4-abfbf5aaccfb",
+              "name": "max_tarefas",
+              "value": 15,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7669274-8b36-5885-9c7f-cb079e4848ba",
+      "name": "Configuração do Notion",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $today }}",
+        "timeMax": "={{ $today.plus({ days: 1 }) }}",
+        "options": {}
+      },
+      "id": "b85ab21b-45bf-5f3f-a5cb-e4ff38928182",
+      "name": "Eventos de hoje",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        460,
+        340
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "credencial-calendar",
+          "name": "Google Calendar account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "eventos",
+        "options": {}
+      },
+      "id": "81eac638-205d-5ee4-acae-2ad89bd51872",
+      "name": "Agrupar eventos",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        680,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('Configuração').first().json.cidade }}"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "lang",
+              "value": "pt_br"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2c77d8b1-b204-5579-b844-afc84ba5e85f",
+      "name": "Previsão do tempo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        340
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "credencial-openweather",
+          "name": "OpenWeatherMap API"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "={{ $('Configuração do Notion').first().json.banco_id }}",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "filterType": "json",
+        "filterJson": "={{ (() => {\n  const c = $('Configuração do Notion').first().json;\n  const col = c.colunas || {};\n  const pad = c.valores_padrao || {};\n  const e = [];\n  if (col.status) (c.status_concluidos || []).forEach(s => e.push({ property: col.status, status: { does_not_equal: s } }));\n  const ou = [];\n  if (col.prazo) ou.push({ property: col.prazo, date: { on_or_before: $today.toISODate() } });\n  if (col.urgencia && c.valor_urgente) {\n    ou.push({ property: col.urgencia, select: { equals: c.valor_urgente } });\n    if (pad.urgencia === c.valor_urgente) ou.push({ property: col.urgencia, select: { is_empty: true } });\n  }\n  if (ou.length) e.push({ or: ou });\n  return JSON.stringify({ and: e });\n})() }}",
+        "simple": false,
+        "options": {}
+      },
+      "id": "91ffbad8-2652-5be6-9b16-d0cc298e5d6a",
+      "name": "Tarefas pendentes",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1160,
+        340
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "credencial-notion",
+          "name": "Notion account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "tarefas",
+        "options": {}
+      },
+      "id": "fd6943b0-68fe-517d-a7ab-7134cbc025f3",
+      "name": "Agrupar tarefas",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Junta agenda, clima e tarefas numa única mensagem (HTML do Telegram)\nconst zona = 'America/Sao_Paulo';\nconst esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n\nconst eventos = ($('Agrupar eventos').first().json.eventos || [])\n  .filter((e) => e.summary)\n  .map((e) => ({\n    titulo: e.summary,\n    inicio: e.start?.dateTime ? DateTime.fromISO(e.start.dateTime).setZone(zona) : null,\n    local: e.location,\n  }))\n  .sort((a, b) => (a.inicio?.toMillis() ?? 0) - (b.inicio?.toMillis() ?? 0));\n\nconst clima = $('Previsão do tempo').first().json;\nconst hoje = DateTime.now().setZone(zona).setLocale('pt-BR');\nconst hojeISO = hoje.toISODate();\n\n// Tudo sobre o banco do Notion vem do nó \"Configuração do Notion\"\nconst cfg = $('Configuração do Notion').first().json;\nconst col = cfg.colunas || {};\nconst pad = cfg.valores_padrao || {};\nconst propriedade = (pr, chave) => (col[chave] ? pr[col[chave]] : undefined);\nconst texto = (p) => (p?.title ?? p?.rich_text ?? []).map((r) => r.plain_text).join('');\n// Valor de uma coluna select/status; se estiver vazia, usa o valor padrão configurado\nconst opcao = (pr, chave) => {\n  const p = propriedade(pr, chave);\n  return p?.select?.name ?? p?.status?.name ?? p?.multi_select?.[0]?.name ?? pad[chave] ?? '';\n};\n\nconst tarefas = ($('Agrupar tarefas').first().json.tarefas || [])\n  .filter((t) => t.properties)\n  .map((t) => {\n    const pr = t.properties;\n    const prazo = propriedade(pr, 'prazo')?.date;\n    const fim = String(prazo?.end ?? prazo?.start ?? pad.prazo ?? '').slice(0, 10);\n    return {\n      titulo: texto(propriedade(pr, 'titulo')) || '(sem título)',\n      url: t.url,\n      status: opcao(pr, 'status'),\n      urgente: !!cfg.valor_urgente && opcao(pr, 'urgencia') === cfg.valor_urgente,\n      importante: !!cfg.valor_importante && opcao(pr, 'relevancia') === cfg.valor_importante,\n      complexidade: opcao(pr, 'complexidade'),\n      fim,\n      atrasada: fim !== '' && fim < hojeISO,\n    };\n  })\n  // Atrasadas primeiro, depois urgentes, importantes e o prazo mais próximo\n  .sort((a, b) =>\n    (b.atrasada - a.atrasada) ||\n    (b.urgente - a.urgente) ||\n    (b.importante - a.importante) ||\n    (a.fim || '9999').localeCompare(b.fim || '9999'));\n\nconst linhas = [];\nlinhas.push(`☀️ <b>Bom dia!</b> Hoje é ${hoje.toFormat(\"cccc, dd 'de' LLLL\")}.`);\nlinhas.push('');\n\nif (clima?.main) {\n  const desc = clima.weather?.[0]?.description ?? '';\n  linhas.push(`🌡️ <b>Tempo em ${esc(clima.name)}:</b> ${Math.round(clima.main.temp)}°C, ${esc(desc)}`);\n  linhas.push(`   mín ${Math.round(clima.main.temp_min)}°C · máx ${Math.round(clima.main.temp_max)}°C · umidade ${clima.main.humidity}%`);\n} else {\n  linhas.push('🌡️ Não consegui buscar a previsão do tempo hoje.');\n}\nlinhas.push('');\n\nlinhas.push(`📅 <b>Agenda (${eventos.length})</b>`);\nif (eventos.length === 0) linhas.push('   Nenhum compromisso. Dia livre!');\nfor (const e of eventos) {\n  const hora = e.inicio ? e.inicio.toFormat('HH:mm') : 'Dia todo';\n  linhas.push(`   • ${hora} — ${esc(e.titulo)}${e.local ? ` (${esc(e.local)})` : ''}`);\n}\nlinhas.push('');\n\nconst max = cfg.max_tarefas || 15;\nconst dm = (iso) => DateTime.fromISO(iso).toFormat('dd/MM');\nconst nAtrasadas = tarefas.filter((t) => t.atrasada).length;\nlinhas.push(`✅ <b>Tarefas (${tarefas.length})</b>${nAtrasadas ? ` · ⚠️ ${nAtrasadas} atrasada(s)` : ''}`);\nif (tarefas.length === 0) linhas.push('   Nada pendente. 🎉');\nfor (const t of tarefas.slice(0, max)) {\n  const tags = [];\n  if (t.urgente) tags.push(`🔴 ${esc(cfg.valor_urgente)}`);\n  if (t.importante) tags.push(`⭐ ${esc(cfg.valor_importante)}`);\n  if (t.complexidade) tags.push(`🧩 ${esc(t.complexidade)}`);\n  if (t.atrasada) tags.push(`⚠️ venceu ${dm(t.fim)}`);\n  else if (t.fim === hojeISO) tags.push('⏰ vence hoje');\n  else if (t.fim) tags.push(`📅 até ${dm(t.fim)}`);\n  const icone = t.status && t.status === cfg.status_em_andamento ? '▶️' : '•';\n  linhas.push(`   ${icone} <a href=\"${esc(t.url)}\">${esc(t.titulo)}</a>`);\n  if (tags.length) linhas.push(`      ${tags.join(' · ')}`);\n}\nif (tarefas.length > max) linhas.push(`   … e mais ${tarefas.length - max}`);\n\nreturn [{ json: { mensagem: linhas.join('\\n') } }];\n"
+      },
+      "id": "da9558cc-4151-5047-95f9-d6f1e0064c6b",
+      "name": "Montar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Configuração').first().json.chat_id }}",
+        "text": "={{ $json.mensagem }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "f3fff94e-51f9-50a8-b603-3788b530ca58",
+      "name": "Enviar no Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1860,
+        340
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🌅 Resumo matinal\nTodo dia às **7h (America/Sao_Paulo)** junta agenda, clima e tarefas e manda uma mensagem no Telegram.\n\n**Configure no nó _Configuração_:**\n- `cidade` → ex.: `Sao Paulo,BR`\n- `chat_id` → troque `SEU_CHAT_ID` pelo seu chat ID",
+        "height": 440,
+        "width": 500,
+        "color": 4
+      },
+      "id": "51e27b23-dda5-5f1b-96fa-eded444aa2b9",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ⚙️ Configuração do Notion\n- `banco_id` → troque `ID_DO_BANCO_NOTION`\n- `colunas` → nome de cada coluna no seu banco (deixe `\"\"` para ignorar uma coluna)\n- `status_concluidos` → status que **não** aparecem\n- `status_em_andamento`, `valor_urgente`, `valor_importante` → opções do seu banco\n- `valores_padrao` → valor usado quando a coluna da tarefa estiver vazia",
+        "height": 380,
+        "width": 500,
+        "color": 6
+      },
+      "id": "1e1f2a7d-0015-536b-93ed-0974af28b368",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📅 Agenda\nBusca os eventos de hoje no Google Calendar (`primary` = agenda principal; troque pelo ID de outra agenda se quiser).\n\nCredencial: **Google Calendar account**",
+        "height": 440,
+        "width": 420
+      },
+      "id": "3052d8a1-5515-536f-90ac-d85a6cd83c4c",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🌡️ Clima\nHTTP Request para a API do OpenWeatherMap.\n\nCredencial **OpenWeatherMap API** do tipo _Query Auth_:\n- Name: `appid`\n- Value: `SUA_API_KEY_OPENWEATHER`\n\nSe falhar, a mensagem sai mesmo assim.",
+        "height": 440,
+        "width": 220
+      },
+      "id": "bccf1675-b25b-5a68-9cfc-1a2e55bea927",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ✅ Tarefas (Notion)\nBusca as tarefas que **não** estão concluídas e têm prazo até hoje **ou** são urgentes. O filtro é montado a partir do nó _Configuração do Notion_.\n\nCompartilhe o banco com a sua integração.\n\nCredencial: **Notion account**",
+        "height": 440,
+        "width": 440
+      },
+      "id": "9c832714-e12e-5a19-bc4f-9aff6ba73881",
+      "name": "Nota 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ✉️ Mensagem\nO nó Code formata tudo em HTML do Telegram.\n\nCredencial: **Telegram Bot**",
+        "height": 440,
+        "width": 460
+      },
+      "id": "5efeaf7c-dbef-5e33-a943-8146020caa87",
+      "name": "Nota 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        60
+      ]
+    }
+  ],
+  "connections": {
+    "Todo dia às 7h": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Configuração do Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração do Notion": {
+      "main": [
+        [
+          {
+            "node": "Eventos de hoje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eventos de hoje": {
+      "main": [
+        [
+          {
+            "node": "Agrupar eventos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar eventos": {
+      "main": [
+        [
+          {
+            "node": "Previsão do tempo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Previsão do tempo": {
+      "main": [
+        [
+          {
+            "node": "Tarefas pendentes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tarefas pendentes": {
+      "main": [
+        [
+          {
+            "node": "Agrupar tarefas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar tarefas": {
+      "main": [
+        [
+          {
+            "node": "Montar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar mensagem": {
+      "main": [
+        [
+          {
+            "node": "Enviar no Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

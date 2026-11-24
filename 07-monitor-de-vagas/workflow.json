@@ -1,0 +1,689 @@
+{
+  "name": "07 - Monitor de vagas",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "93b8b833-987b-59c3-a6e0-0e34fe77e4a2",
+      "name": "A cada 6 horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b4a16e9c-02f3-5995-8f12-0be237a09f47",
+              "name": "palavras_chave",
+              "value": "[\"python\", \"n8n\", \"automação\", \"automation\"]",
+              "type": "array"
+            },
+            {
+              "id": "22ef5353-8f03-5945-90f7-9e656ef21f8b",
+              "name": "feeds",
+              "value": "[\n  {\n    \"nome\": \"We Work Remotely\",\n    \"url\": \"https://weworkremotely.com/categories/remote-programming-jobs.rss\"\n  },\n  {\n    \"nome\": \"Meu feed\",\n    \"url\": \"SEU_FEED_RSS\"\n  }\n]",
+              "type": "array"
+            },
+            {
+              "id": "d343b627-f8d7-54a1-be48-f2895a920c2b",
+              "name": "busca_remotive",
+              "value": "python",
+              "type": "string"
+            },
+            {
+              "id": "c8885bab-b4b9-540e-ba7b-5b8a6e36c162",
+              "name": "chat_id",
+              "value": "SEU_CHAT_ID",
+              "type": "string"
+            },
+            {
+              "id": "b77c8817-9c74-5d29-b772-e805861260d5",
+              "name": "max_por_alerta",
+              "value": 15,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c5de8c99-2910-58a6-b6ad-029be0ce642c",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "feeds",
+        "options": {}
+      },
+      "id": "a6269c22-3da4-5a23-8740-6cf55dec77b1",
+      "name": "Separar feeds",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        460,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "70232f9f-83c9-5981-ace5-fcfc47a5b558",
+      "name": "Ler feed de vagas",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        240
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "94bf39c5-8e29-55cd-a9c5-f42b286cb4ef",
+              "name": "id",
+              "value": "={{ $json.guid || $json.link || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f6b94442-ae97-5f39-9239-aca2662e90eb",
+              "name": "titulo",
+              "value": "={{ ($json.title ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "be229ccc-65b2-59e4-ac3f-256397163c14",
+              "name": "empresa",
+              "value": "={{ $json.creator ?? $json.author ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ead41268-7460-5c88-9efc-d59ae7aa6b65",
+              "name": "local",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "91242493-7f7d-5086-b643-50e71f98c50a",
+              "name": "link",
+              "value": "={{ $json.link ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "57bbbb5d-ebc9-5d88-a96e-b8ad2703dfc6",
+              "name": "descricao",
+              "value": "={{ ($json.contentSnippet ?? '').slice(0, 2000) }}",
+              "type": "string"
+            },
+            {
+              "id": "e702c2ab-a22b-5058-b7a0-3f58ccdfba4d",
+              "name": "fonte",
+              "value": "={{ $('Separar feeds').item.json.nome }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a522baca-1519-55b0-90e6-6643fdaee1fa",
+      "name": "Normalizar RSS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://remotive.com/api/remote-jobs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search",
+              "value": "={{ $json.busca_remotive }}"
+            },
+            {
+              "name": "limit",
+              "value": "50"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "7bbc43ef-29b3-5e67-bad0-3331091036f2",
+      "name": "Buscar na Remotive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        560
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "jobs",
+        "options": {}
+      },
+      "id": "7f9b9128-6980-5d40-a908-814ab3b27167",
+      "name": "Separar vagas",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        680,
+        560
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bb94277-2c10-5851-8f0f-b960f3ac9606",
+              "name": "id",
+              "value": "={{ $json.id ? 'remotive-' + $json.id : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b0043812-0fd1-5d06-b2ce-32ae2bdec6d4",
+              "name": "titulo",
+              "value": "={{ $json.title ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ea4d8dd7-3185-59f2-948b-5556e970ca83",
+              "name": "empresa",
+              "value": "={{ $json.company_name ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "ab73c5f9-57c3-5479-a72d-d02a9284af8d",
+              "name": "local",
+              "value": "={{ $json.candidate_required_location ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "907de072-9be7-58fd-9aaf-d183895c83a7",
+              "name": "link",
+              "value": "={{ $json.url ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "85b91f51-ce63-570b-b81f-a2de21ae5aab",
+              "name": "descricao",
+              "value": "={{ ($json.description ?? '').replace(/<[^>]+>/g, ' ').slice(0, 2000) }}",
+              "type": "string"
+            },
+            {
+              "id": "cf3c7433-c644-58fe-8ec7-65facd80e27e",
+              "name": "fonte",
+              "value": "Remotive",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "69cac1de-833d-520a-8a39-4015dc4c9760",
+      "name": "Normalizar Remotive",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "0725a597-6766-5219-82c9-8755afd4fc5d",
+      "name": "Juntar fontes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1140,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b23ae1cf-81ac-52d8-8fbb-23383846fa44",
+              "leftValue": "={{ $json.id }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "9aa5be1e-e218-5289-9d29-10a589884dea",
+              "leftValue": "={{ $('Configuração').first().json.palavras_chave.some(p => ($json.titulo + ' ' + $json.descricao).toLowerCase().includes(p.toLowerCase())) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "51b839fe-11bc-5088-8ae6-82fd560f49af",
+      "name": "Tem palavra-chave?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "removeDuplicateInputItems",
+        "compare": "selectedFields",
+        "fieldsToCompare": "id",
+        "options": {}
+      },
+      "id": "2d0cdfc6-96bd-5ce2-ba25-1c0ae788127a",
+      "name": "Remover repetidas",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1580,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsWithAlreadySeenKeyValues",
+        "dedupeValue": "={{ $json.id }}",
+        "options": {
+          "scope": "workflow",
+          "historySize": 10000
+        }
+      },
+      "id": "656019de-2d06-573c-a3f3-e4ac50c0f871",
+      "name": "Só vagas nunca vistas",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": "={{ $('Configuração').first().json.max_por_alerta }}"
+      },
+      "id": "ff7a63ec-e00f-537a-b818-bfe7e00c1098",
+      "name": "Limitar alerta",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0985fb10-ebec-5953-90fa-1eab02862a4c",
+              "name": "linha",
+              "value": "={{ (() => {\n  const e = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n  const extra = [$json.empresa, $json.local].filter(Boolean).map(e).join(' · ');\n  return `💼 <b>${e($json.titulo)}</b>` + (extra ? `\\n🏢 ${extra}` : '') + `\\n🔗 <a href=\"${e($json.link)}\">ver vaga</a> (${e($json.fonte)})`;\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "55fc0797-4e5d-5568-8ea0-bc1bc62c57e3",
+      "name": "Formatar vaga",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "linha"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf9bf4a4-bd13-5169-ad73-dccf9450044b",
+      "name": "Juntar vagas",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Configuração').first().json.chat_id }}",
+        "text": "=🔔 <b>{{ $json.linha.length }} vaga(s) nova(s)</b>\n\n{{ $json.linha.join('\\n\\n') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "9f50bed5-da84-5dce-81c1-8f9b1fce8e15",
+      "name": "Enviar vagas novas",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2680,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🔎 Monitor de vagas\nA cada 6h busca vagas em feeds RSS e na API pública da Remotive, filtra por palavras-chave e avisa **só as novas** no Telegram.\n\n**Configure no nó _Configuração_:**\n- `palavras_chave`\n- `feeds` (troque `SEU_FEED_RSS`)\n- `busca_remotive`\n- `chat_id` (`SEU_CHAT_ID`)",
+        "height": 560,
+        "width": 480,
+        "color": 4
+      },
+      "id": "2760273b-1acc-5bc6-b21c-bb42e2ce2252",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📡 Fontes\nRSS (qualquer site/agregador que tenha feed) + HTTP Request para a Remotive. Falhas em uma fonte não param as outras.",
+        "height": 760,
+        "width": 680
+      },
+      "id": "0c56ac4a-ca56-5b9b-8f80-dd7cb3042f19",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🧠 Memória de vagas vistas\n_Remove Duplicates_ no modo **\"processados em execuções anteriores\"** guarda os IDs dentro do próprio n8n (escopo do workflow, até 10 mil IDs). Nenhuma vaga é avisada duas vezes.\n\nNa 1ª execução, tudo é novo: o alerta é limitado a `max_por_alerta`.",
+        "height": 560,
+        "width": 1000
+      },
+      "id": "3a1b1699-a927-5f94-b424-2379396c7dbe",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📲 Alerta\nUma mensagem só com todas as vagas novas.\n\nCredencial: **Telegram Bot**",
+        "height": 560,
+        "width": 620
+      },
+      "id": "e51535e9-6756-52f5-9fa0-dfe1b5ca0d3f",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2180,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "A cada 6 horas": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Separar feeds",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar na Remotive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar feeds": {
+      "main": [
+        [
+          {
+            "node": "Ler feed de vagas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler feed de vagas": {
+      "main": [
+        [
+          {
+            "node": "Normalizar RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar na Remotive": {
+      "main": [
+        [
+          {
+            "node": "Separar vagas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar vagas": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Remotive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar RSS": {
+      "main": [
+        [
+          {
+            "node": "Juntar fontes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Remotive": {
+      "main": [
+        [
+          {
+            "node": "Juntar fontes",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Juntar fontes": {
+      "main": [
+        [
+          {
+            "node": "Tem palavra-chave?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem palavra-chave?": {
+      "main": [
+        [
+          {
+            "node": "Remover repetidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remover repetidas": {
+      "main": [
+        [
+          {
+            "node": "Só vagas nunca vistas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Só vagas nunca vistas": {
+      "main": [
+        [
+          {
+            "node": "Limitar alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limitar alerta": {
+      "main": [
+        [
+          {
+            "node": "Formatar vaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar vaga": {
+      "main": [
+        [
+          {
+            "node": "Juntar vagas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar vagas": {
+      "main": [
+        [
+          {
+            "node": "Enviar vagas novas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

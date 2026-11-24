@@ -1,0 +1,293 @@
+{
+  "name": "02 - E-mail para tarefa",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "ID_DA_ETIQUETA_FAZER"
+          ]
+        },
+        "options": {}
+      },
+      "id": "0a77ff8c-9462-5266-9bd0-60fc1bd79eb6",
+      "name": "E-mail com etiqueta fazer",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        340
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "63e69f49-aefc-545f-8f67-14e113b29706",
+              "name": "titulo",
+              "value": "={{ $json.subject || '(sem assunto)' }}",
+              "type": "string"
+            },
+            {
+              "id": "9e4e2aaf-863b-5b74-9896-eb621d479eff",
+              "name": "remetente",
+              "value": "={{ $json.from?.text ?? $json.from?.value?.[0]?.address ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5c4d21b-49c3-5fdd-88a5-8c592c74c165",
+              "name": "link",
+              "value": "=https://mail.google.com/mail/u/0/#all/{{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2fcd4a8c-8033-5fc1-a811-7b043f79f764",
+              "name": "recebido_em",
+              "value": "={{ DateTime.fromISO($json.date).setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "b3eab74a-dd07-53e4-8d75-f6df1713b407",
+              "name": "trecho",
+              "value": "={{ ($json.text ?? '').trim().slice(0, 500) }}",
+              "type": "string"
+            },
+            {
+              "id": "5ad047fc-dd36-5205-a713-ddeb2b78b079",
+              "name": "message_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "53786530-474b-5d61-a2b0-29858cde4b74",
+      "name": "Preparar dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "ID_DO_BANCO_NOTION",
+          "mode": "id"
+        },
+        "title": "={{ $json.titulo }}",
+        "propertiesUi": {
+          "propertyValues": []
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "paragraph",
+              "textContent": "=De: {{ $json.remetente }}"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "=Recebido em: {{ $json.recebido_em }}"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "=Abrir e-mail: {{ $json.link }}"
+            },
+            {
+              "type": "paragraph",
+              "textContent": "={{ $json.trecho }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "469e940d-8f11-5cb0-a478-b26ab2215d4d",
+      "name": "Criar tarefa no Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        340
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "credencial-notion",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Preparar dados').item.json.message_id }}",
+        "labelIds": [
+          "ID_DA_ETIQUETA_FAZER"
+        ]
+      },
+      "id": "eec5bdff-0fa1-5758-b15c-6ac78914c294",
+      "name": "Remover etiqueta fazer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        340
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Preparar dados').item.json.message_id }}",
+        "labelIds": [
+          "ID_DA_ETIQUETA_PROCESSADO"
+        ]
+      },
+      "id": "e1817280-0954-5d54-9db6-1e9fd0671f91",
+      "name": "Marcar como processado",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        340
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📧➡️✅ E-mail para tarefa\nA cada 5 min verifica e-mails com a etiqueta **fazer** no Gmail.\n\nNo gatilho, selecione a etiqueta `fazer` (substitui `ID_DA_ETIQUETA_FAZER`).\n\nCredencial: **Gmail account**",
+        "height": 460,
+        "width": 520,
+        "color": 4
+      },
+      "id": "c196bf54-7d5c-5f96-a7c7-f698ba593037",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🗂️ Notion\nCria uma página no banco de tarefas com o assunto como título e remetente + link no corpo.\n\n- Troque `ID_DO_BANCO_NOTION`\n- Compartilhe o banco com a integração\n\nCredencial: **Notion account**",
+        "height": 460,
+        "width": 260
+      },
+      "id": "96649aaa-ea55-5452-af5d-6180c1cc10f8",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🏷️ Limpeza\nTira a etiqueta `fazer` e coloca `processado`, para o e-mail não virar tarefa duas vezes.\n\nSelecione as etiquetas nos dois nós (`ID_DA_ETIQUETA_FAZER`, `ID_DA_ETIQUETA_PROCESSADO`).",
+        "height": 460,
+        "width": 460
+      },
+      "id": "1ccf0ac4-923c-58df-9a6b-7fc55e2cd427",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        680,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "E-mail com etiqueta fazer": {
+      "main": [
+        [
+          {
+            "node": "Preparar dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar dados": {
+      "main": [
+        [
+          {
+            "node": "Criar tarefa no Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar tarefa no Notion": {
+      "main": [
+        [
+          {
+            "node": "Remover etiqueta fazer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remover etiqueta fazer": {
+      "main": [
+        [
+          {
+            "node": "Marcar como processado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

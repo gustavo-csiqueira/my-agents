@@ -1,0 +1,520 @@
+{
+  "name": "04 - Controle de gastos",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "40bf974a-f7ab-5dca-ac10-fa385dee2463",
+      "name": "Mensagem no bot",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eb91b7e4-3ee3-52b6-b84f-71b2c17705f4",
+              "leftValue": "={{ String($json.message.chat.id) }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "SEU_CHAT_ID"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0e204c1e-7ab0-5f39-bcc8-ce1af015197f",
+      "name": "Só o meu chat",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f115b0d3-60a0-52cc-bfcd-64bc57f8a0df",
+                    "leftValue": "={{ ($json.message.text ?? '').trim() }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "rightValue": "/resumo"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "resumo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b4712358-9ca6-53e4-af3e-e6d78cfb5c7f",
+                    "leftValue": "={{ ($json.message.text ?? '').trim() }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "rightValue": "^.+\\s+(r\\$\\s*)?\\d[\\d.,]*$"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gasto"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outro"
+        }
+      },
+      "id": "c659c383-d740-5c20-adcd-e7d092414c89",
+      "name": "Tipo de mensagem",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai descrição e valor de mensagens como \"mercado 85,90\" ou \"uber 1.234,50\"\n// e define a categoria por palavras-chave. Edite CATEGORIAS à vontade.\nconst CATEGORIAS = {\n  'Alimentação': ['mercado', 'supermercado', 'padaria', 'restaurante', 'lanche', 'ifood', 'almoço', 'almoco', 'jantar', 'café', 'cafe', 'pizza'],\n  'Transporte': ['uber', '99', 'gasolina', 'combustível', 'combustivel', 'ônibus', 'onibus', 'metrô', 'metro', 'estacionamento', 'pedágio', 'pedagio'],\n  'Moradia': ['aluguel', 'condomínio', 'condominio', 'luz', 'energia', 'água', 'agua', 'internet', 'gás', 'gas'],\n  'Saúde': ['farmácia', 'farmacia', 'remédio', 'remedio', 'médico', 'medico', 'dentista', 'academia', 'exame'],\n  'Lazer': ['cinema', 'show', 'bar', 'netflix', 'spotify', 'viagem', 'jogo', 'livro'],\n  'Compras': ['roupa', 'sapato', 'amazon', 'shopee', 'mercado livre', 'presente'],\n};\n\nreturn $input.all().map((item) => {\n  const texto = item.json.message.text.trim();\n  const m = texto.match(/^(.+?)\\s+(?:r\\$\\s*)?(\\d[\\d.,]*)$/i);\n  const descricao = m[1].trim();\n  let bruto = m[2];\n  // \"1.234,56\" -> 1234.56 | \"85,90\" -> 85.90 | \"85.90\" -> 85.90\n  if (bruto.includes(',')) bruto = bruto.replace(/\\./g, '').replace(',', '.');\n  const valor = Math.round(parseFloat(bruto) * 100) / 100;\n\n  const d = descricao.toLowerCase();\n  const categoria = Object.entries(CATEGORIAS)\n    .find(([, palavras]) => palavras.some((p) => d.includes(p)))?.[0] ?? 'Outros';\n\n  return {\n    json: {\n      data: DateTime.now().setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy'),\n      descricao,\n      categoria,\n      valor,\n      chat_id: item.json.message.chat.id,\n    },\n  };\n});\n"
+      },
+      "id": "7f8111c8-01e6-516d-90fc-2f692fcda704",
+      "name": "Extrair e categorizar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DA_PLANILHA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Gastos",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "data": "={{ $json.data }}",
+            "descricao": "={{ $json.descricao }}",
+            "categoria": "={{ $json.categoria }}",
+            "valor": "={{ $json.valor }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "data",
+              "displayName": "data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "descricao",
+              "displayName": "descricao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "categoria",
+              "displayName": "categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "937a1875-3521-5e8b-90ed-66796d046779",
+      "name": "Adicionar linha na planilha",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "credencial-sheets",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Extrair e categorizar').item.json.chat_id }}",
+        "text": "=✅ Anotado: <b>{{ $('Extrair e categorizar').item.json.descricao }}</b> — R$ {{ $('Extrair e categorizar').item.json.valor.toFixed(2).replace('.', ',') }} ({{ $('Extrair e categorizar').item.json.categoria }})",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "7cf207de-c9ed-53c6-9452-0476337e5a20",
+      "name": "Confirmar registro",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DA_PLANILHA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Gastos",
+          "mode": "name"
+        },
+        "options": {
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "id": "10428048-a2a2-523b-abe6-4d8f89d547bb",
+      "name": "Ler gastos",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "credencial-sheets",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Soma os gastos do mês atual por categoria\nconst agora = DateTime.now().setZone('America/Sao_Paulo').setLocale('pt-BR');\nconst sufixo = agora.toFormat('MM/yyyy'); // datas gravadas como dd/MM/yyyy\n\nconst porCategoria = {};\nlet total = 0;\nfor (const { json: l } of $input.all()) {\n  if (!l.data || !String(l.data).endsWith(sufixo)) continue;\n  const valor = typeof l.valor === 'number' ? l.valor : parseFloat(String(l.valor).replace(',', '.'));\n  if (isNaN(valor)) continue;\n  const cat = l.categoria || 'Outros';\n  porCategoria[cat] = (porCategoria[cat] ?? 0) + valor;\n  total += valor;\n}\n\nconst brl = (v) => 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');\nconst linhas = [`📊 <b>Gastos de ${agora.toFormat('LLLL/yyyy')}</b>`, ''];\nconst ordenado = Object.entries(porCategoria).sort((a, b) => b[1] - a[1]);\nif (ordenado.length === 0) linhas.push('Nenhum gasto registrado neste mês ainda.');\nfor (const [cat, v] of ordenado) {\n  const pct = total ? Math.round((v / total) * 100) : 0;\n  linhas.push(`• ${cat}: ${brl(v)} (${pct}%)`);\n}\nif (ordenado.length) linhas.push('', `💰 <b>Total: ${brl(total)}</b>`);\n\nreturn [{ json: { mensagem: linhas.join('\\n') } }];\n"
+      },
+      "id": "3178ac78-eb36-5afb-86cd-fb33d05f9d51",
+      "name": "Calcular resumo do mês",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Mensagem no bot').first().json.message.chat.id }}",
+        "text": "={{ $json.mensagem }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "af4b6442-3d19-51be-81dc-f23ad76554ea",
+      "name": "Enviar resumo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        160
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "🤔 Não entendi. Me mande assim:\n\n<code>mercado 85,90</code>\n<code>uber 23.50</code>\n\nOu <code>/resumo</code> para ver o total do mês por categoria.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "7618abad-a254-54dd-a177-4619a17e9f32",
+      "name": "Explicar formato",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        640
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 💸 Controle de gastos\nBot do Telegram que anota gastos numa planilha.\n\n- `mercado 85,90` → registra\n- `/resumo` → total do mês por categoria\n\n**Segurança:** o filtro _Só o meu chat_ ignora qualquer pessoa que não seja você. Troque `SEU_CHAT_ID`.\n\nCredencial: **Telegram Bot**",
+        "height": 360,
+        "width": 640,
+        "color": 4
+      },
+      "id": "cd7bdef1-80bd-56b6-9e2c-f6cf0f2f9e4a",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📊 /resumo\nLê a aba `Gastos`, soma o mês atual por categoria e responde.",
+        "height": 300,
+        "width": 680
+      },
+      "id": "d3f127ce-80ed-54a0-82a0-23674e7c67b8",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        660,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ➕ Registrar gasto\nAceita vírgula ou ponto (`85,90`, `85.90`, `1.234,50`). Categorias por palavra-chave no nó Code.\n\nPlanilha `ID_DA_PLANILHA`, aba `Gastos` com colunas `data | descricao | categoria | valor`.\n\nCredencial: **Google Sheets account**",
+        "height": 240,
+        "width": 680
+      },
+      "id": "eb151335-9e51-5530-962c-02c36805c4c8",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        660,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ❓ Formato desconhecido\nResponde com um exemplo de uso.",
+        "height": 200,
+        "width": 260
+      },
+      "id": "59a7dd8a-d858-512e-a3f0-9df0860f0bd9",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        660,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Mensagem no bot": {
+      "main": [
+        [
+          {
+            "node": "Só o meu chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Só o meu chat": {
+      "main": [
+        [
+          {
+            "node": "Tipo de mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo de mensagem": {
+      "main": [
+        [
+          {
+            "node": "Ler gastos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extrair e categorizar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Explicar formato",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler gastos": {
+      "main": [
+        [
+          {
+            "node": "Calcular resumo do mês",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular resumo do mês": {
+      "main": [
+        [
+          {
+            "node": "Enviar resumo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair e categorizar": {
+      "main": [
+        [
+          {
+            "node": "Adicionar linha na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adicionar linha na planilha": {
+      "main": [
+        [
+          {
+            "node": "Confirmar registro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

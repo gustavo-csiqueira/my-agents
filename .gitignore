@@ -1,0 +1,44 @@
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+*credentials*.json
+*-credentials.json
+client_secret*.json
+service-account*.json
+token*.json
+secrets/
+
+# Dados locais do n8n (inclui o banco com credenciais criptografadas)
+.n8n/
+n8n_data/
+*.sqlite
+*.sqlite-journal
+database.sqlite*
+
+# Exportações locais/rascunhos que podem conter IDs reais
+*.local.json
+*.backup.json
+exports/
+
+# Logs
+*.log
+logs/
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# Node / Python (scripts auxiliares)
+node_modules/
+__pycache__/
+.venv/

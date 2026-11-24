@@ -1,0 +1,709 @@
+{
+  "name": "06 - Digest RSS semanal",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                0
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "f1d5af6b-2dfd-5674-9b8d-5e04b83f04f1",
+      "name": "Domingo às 9h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9058bb8-a3e9-5f43-8317-e0c6c26a0e35",
+              "name": "feeds",
+              "value": "[\n  {\n    \"nome\": \"Exemplo 1\",\n    \"url\": \"SEU_FEED_RSS_1\"\n  },\n  {\n    \"nome\": \"Exemplo 2\",\n    \"url\": \"SEU_FEED_RSS_2\"\n  },\n  {\n    \"nome\": \"Exemplo 3\",\n    \"url\": \"SEU_FEED_RSS_3\"\n  }\n]",
+              "type": "array"
+            },
+            {
+              "id": "49db18f5-b69a-59f6-bef6-b2ed3312ed3f",
+              "name": "temas",
+              "value": "[\"Inteligência Artificial\", \"Programação\", \"Ferramentas e Produtividade\", \"Negócios e Carreira\", \"Ciência\", \"Outros\"]",
+              "type": "array"
+            },
+            {
+              "id": "be9566bc-e087-53d9-9225-232f2e726ffb",
+              "name": "dias",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "e8be281d-de41-5a3c-a63b-a52697210b5b",
+              "name": "max_artigos",
+              "value": 40,
+              "type": "number"
+            },
+            {
+              "id": "0f54df79-3950-5254-ac9b-9cdfb61447b7",
+              "name": "email_destino",
+              "value": "SEU_EMAIL@exemplo.com",
+              "type": "string"
+            },
+            {
+              "id": "8fa0ef0d-0e0c-5463-8135-3d1d81c3315c",
+              "name": "chat_id",
+              "value": "SEU_CHAT_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "747ffade-3d99-5776-bd18-7f37337dca7b",
+      "name": "Configuração",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "feeds",
+        "options": {}
+      },
+      "id": "33a45f7a-4b20-5fc4-9a46-286c289a8cbc",
+      "name": "Separar feeds",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        440,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "3fdf7638-0bd5-5f09-9c18-abcd931bb4b1",
+      "name": "Ler feed RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        400
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca3e25cd-8f43-5971-ba8a-a3598e0284d8",
+              "name": "fonte",
+              "value": "={{ $('Separar feeds').item.json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "8d11b83c-1047-5423-aee1-09afd1b1c0ae",
+              "name": "feed_url",
+              "value": "={{ $('Separar feeds').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "59c43bad-28ef-5da1-8897-b64507faf079",
+              "name": "erro",
+              "value": "={{ $json.error ? String($json.error.message ?? $json.error) : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "d814a25b-6d3b-5869-9e25-7dd313a1d24b",
+              "name": "titulo",
+              "value": "={{ ($json.title ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "9d90f912-7f04-52f4-b07c-ba19a9f14a6d",
+              "name": "link",
+              "value": "={{ ($json.link ?? '').split('?utm_')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "6f2c4bcf-12b6-5921-88a5-ac5bb348bc29",
+              "name": "data",
+              "value": "={{ $json.isoDate ?? $json.pubDate ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "2396fbf6-6561-5dc9-9768-c8a1673af2f9",
+              "name": "conteudo",
+              "value": "={{ ($json.contentSnippet ?? $json.content ?? $json.summary ?? '').replace(/\\s+/g, ' ').trim().slice(0, 3000) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e265d1d1-2c7c-5bd5-84c4-fa64336a4423",
+      "name": "Normalizar itens",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "32e88dcf-dd7c-5a08-b92c-18dafc5d4159",
+              "leftValue": "={{ $json.erro }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "950b8806-de08-56f5-a7a3-36926d48fd34",
+              "leftValue": "={{ $json.link }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "id": "5b601da5-1406-539b-a46a-4629a771cfc9",
+              "leftValue": "={{ $json.data }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              },
+              "rightValue": "={{ $now.minus({ days: $('Configuração').first().json.dias }) }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3abd066b-2dbf-50a7-9962-1858f1648164",
+      "name": "Só da última semana",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "removeDuplicateInputItems",
+        "compare": "selectedFields",
+        "fieldsToCompare": "link",
+        "options": {}
+      },
+      "id": "0dfdd169-85ae-57b2-86ad-01006f3dcd1b",
+      "name": "Remover duplicados",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "data",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "67b3d337-9c0c-50e2-94e6-d4bbf47053b7",
+      "name": "Mais recentes primeiro",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": "={{ $('Configuração').first().json.max_artigos }}"
+      },
+      "id": "326ba506-60cc-5a48-bc22-c698c209080f",
+      "name": "Limitar quantidade",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Fonte: {{ $json.fonte }}\nTítulo: {{ $json.titulo }}\n\nConteúdo:\n{{ $json.conteudo || '(sem conteúdo no feed, use apenas o título)' }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Você prepara um digest semanal de leitura para uma pessoa no Brasil.\nPara o artigo recebido:\n1. Escreva um resumo em português do Brasil com 2 a 3 frases, direto e sem floreios, dizendo do que se trata e por que importa.\n2. Escolha exatamente UM tema desta lista: {{ $('Configuração').first().json.temas.join(', ') }}.\n3. Traduza o título para português se ele estiver em outro idioma.\nNão invente informações que não estejam no texto."
+            }
+          ]
+        }
+      },
+      "id": "a7bd0d05-4414-557a-82f3-1e8cb68449e0",
+      "name": "Resumir artigo",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        2000,
+        400
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-5-5",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "b346f41f-fafe-5e07-83e9-6e7374f179cd",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1960,
+        640
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "credencial-anthropic",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"titulo_pt\": \"Título em português\",\n  \"resumo\": \"Resumo de 2 a 3 frases em português.\",\n  \"tema\": \"Inteligência Artificial\"\n}"
+      },
+      "id": "89e63e77-7015-5862-91da-cbc29b799aef",
+      "name": "Formato da resposta",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        2160,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e58ee8dd-8add-52cc-9c6e-72e38e87b27d",
+              "name": "fonte",
+              "value": "={{ $('Limitar quantidade').item.json.fonte }}",
+              "type": "string"
+            },
+            {
+              "id": "68aba3b8-1499-5763-9255-2175a0713ef6",
+              "name": "link",
+              "value": "={{ $('Limitar quantidade').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "78b649ff-db0b-52d3-bd94-0c0bd8d3d2ab",
+              "name": "data",
+              "value": "={{ $('Limitar quantidade').item.json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "1694d4dd-7fc7-5d2d-b266-0a66e0f375cc",
+              "name": "titulo",
+              "value": "={{ $json.output?.titulo_pt || $('Limitar quantidade').item.json.titulo }}",
+              "type": "string"
+            },
+            {
+              "id": "da518133-a48c-5ebe-99b8-57794a9db569",
+              "name": "resumo",
+              "value": "={{ $json.output?.resumo || ($('Limitar quantidade').item.json.conteudo.slice(0, 280) + '…') }}",
+              "type": "string"
+            },
+            {
+              "id": "0105083c-8cef-53c7-85f6-3feed987b580",
+              "name": "tema",
+              "value": "={{ $('Configuração').first().json.temas.includes($json.output?.tema) ? $json.output.tema : 'Outros' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "79842d58-0a85-5713-93a6-67bc74d5d38e",
+      "name": "Juntar resumo e artigo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta o digest em HTML (e-mail) e numa versão curta (Telegram), agrupado por tema.\nconst cfg = $('Configuração').first().json;\nconst artigos = $input.all().map((i) => i.json);\nconst esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n\n// Feeds que falharam (vêm do nó \"Normalizar itens\" com o campo erro preenchido)\nlet falhas = [];\ntry {\n  const vistos = new Set();\n  falhas = $('Normalizar itens').all().map((i) => i.json)\n    .filter((j) => j.erro && !vistos.has(j.fonte) && vistos.add(j.fonte));\n} catch (e) { falhas = []; }\n\n// Agrupa por tema respeitando a ordem da lista de temas\nconst grupos = {};\nfor (const a of artigos) (grupos[a.tema] ??= []).push(a);\nconst ordem = [...cfg.temas, ...Object.keys(grupos)].filter((t, i, arr) => grupos[t] && arr.indexOf(t) === i);\n\nconst hoje = DateTime.now().setZone('America/Sao_Paulo').setLocale('pt-BR');\nconst inicio = hoje.minus({ days: cfg.dias });\nconst periodo = `${inicio.toFormat(\"dd 'de' LLL\")} a ${hoje.toFormat(\"dd 'de' LLL\")}`;\nconst dataCurta = (d) => { const dt = DateTime.fromISO(d); return dt.isValid ? dt.setZone('America/Sao_Paulo').toFormat('dd/MM') : ''; };\n\n// ---------- HTML ----------\nconst cor = '#2f6f4f';\nlet html = `<!doctype html><html><body style=\"margin:0;background:#f4f4f1;font-family:Georgia,'Times New Roman',serif;color:#1f1f1f;\">\n<div style=\"max-width:640px;margin:0 auto;padding:32px 20px;\">\n  <p style=\"margin:0;font:12px/1.4 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#777;\">Digest semanal · ${esc(periodo)}</p>\n  <h1 style=\"margin:6px 0 4px;font-size:28px;\">Leituras da semana</h1>\n  <p style=\"margin:0 0 24px;font:14px/1.5 Arial,sans-serif;color:#555;\">${artigos.length} artigos de ${new Set(artigos.map((a) => a.fonte)).size} fontes, em ${ordem.length} temas.</p>`;\n\nfor (const tema of ordem) {\n  html += `<h2 style=\"margin:32px 0 12px;padding-bottom:6px;border-bottom:2px solid ${cor};font-size:20px;color:${cor};\">${esc(tema)} <span style=\"font:13px Arial,sans-serif;color:#888;\">(${grupos[tema].length})</span></h2>`;\n  for (const a of grupos[tema]) {\n    html += `<div style=\"margin:0 0 20px;\">\n      <a href=\"${esc(a.link)}\" style=\"font-size:17px;font-weight:bold;color:#1f1f1f;text-decoration:none;\">${esc(a.titulo)}</a>\n      <p style=\"margin:4px 0 6px;font:15px/1.55 Arial,sans-serif;color:#333;\">${esc(a.resumo)}</p>\n      <p style=\"margin:0;font:12px Arial,sans-serif;color:#888;\">${esc(a.fonte)}${dataCurta(a.data) ? ' · ' + dataCurta(a.data) : ''} · <a href=\"${esc(a.link)}\" style=\"color:${cor};\">ler artigo →</a></p>\n    </div>`;\n  }\n}\nif (falhas.length) {\n  html += `<div style=\"margin-top:32px;padding:12px 16px;background:#fff6e5;border-left:4px solid #e0a100;font:13px/1.5 Arial,sans-serif;color:#6b5000;\">\n    <b>⚠️ Feeds com problema nesta semana:</b><br>${falhas.map((f) => `${esc(f.fonte)} — ${esc(f.erro).slice(0, 120)}`).join('<br>')}</div>`;\n}\nhtml += `<p style=\"margin-top:40px;font:12px Arial,sans-serif;color:#999;text-align:center;\">Gerado automaticamente com n8n · resumos feitos por IA, confira o original antes de citar.</p></div></body></html>`;\n\n// ---------- Telegram (limite de 4096 caracteres) ----------\nconst LIMITE = 3900;\nlet tg = `📰 <b>Digest semanal</b> · ${esc(periodo)}\\n${artigos.length} artigos\\n`;\nlet cortados = 0;\nfor (const tema of ordem) {\n  const bloco = `\\n<b>${esc(tema)}</b>\\n` + grupos[tema].map((a) => `• <a href=\"${esc(a.link)}\">${esc(a.titulo)}</a>`).join('\\n') + '\\n';\n  if (tg.length + bloco.length > LIMITE) { cortados += grupos[tema].length; continue; }\n  tg += bloco;\n}\nif (cortados) tg += `\\n…e mais ${cortados} no e-mail.`;\nif (falhas.length) tg += `\\n⚠️ ${falhas.length} feed(s) com erro: ${falhas.map((f) => esc(f.fonte)).join(', ')}`;\n\nreturn [{ json: {\n  assunto: `📰 Digest semanal: ${artigos.length} leituras (${periodo})`,\n  html,\n  telegram: tg,\n  email_destino: cfg.email_destino,\n  chat_id: cfg.chat_id,\n} }];\n"
+      },
+      "id": "05680a84-b189-51a5-a5ce-9ca3d0cb0666",
+      "name": "Montar digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "sendTo": "={{ $json.email_destino }}",
+        "subject": "={{ $json.assunto }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ef27bdf9-3edf-57f9-8bba-6323f4a8cd6f",
+      "name": "Enviar por e-mail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2800,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.telegram }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "d95ebee7-42a8-517f-83a2-00895280cdad",
+      "name": "Enviar no Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2800,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📰 Digest RSS semanal\nTodo **domingo às 9h** lê seus feeds, pega os artigos dos últimos 7 dias, resume cada um com IA e envia um digest agrupado por tema.\n\n**Configure no nó _Configuração_:**\n- `feeds` → lista `{nome, url}` (troque `SEU_FEED_RSS_*`)\n- `temas` → temas usados no agrupamento\n- `dias` → janela de tempo (padrão 7)\n- `max_artigos` → teto para controlar custo de IA\n- `email_destino` e `chat_id`",
+        "height": 580,
+        "width": 480,
+        "color": 4
+      },
+      "id": "f52071d1-74c5-5df9-90a1-9ba34834926c",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📥 Coleta resistente a falhas\nCada feed é lido separadamente. Se um feed estiver fora do ar, o nó **continua** (com 2 tentativas) e o erro vira um aviso no fim do digest, sem derrubar o fluxo.",
+        "height": 580,
+        "width": 620
+      },
+      "id": "cc847a46-58ee-5eef-863d-bc0832e2e354",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🧹 Limpeza\nFiltra pela data, remove links duplicados (o mesmo artigo em dois feeds), ordena e limita a quantidade.",
+        "height": 580,
+        "width": 860
+      },
+      "id": "0ae57131-7a5a-5026-b01a-21db82caac7f",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🧠 Resumo com IA\n2–3 frases em português + tema escolhido da lista. Se a IA falhar para um artigo, usa um trecho do original no lugar.\n\nCredencial: **Anthropic account** (`claude-haiku-5-5`)",
+        "height": 800,
+        "width": 560
+      },
+      "id": "d956d810-a0c7-564f-b153-01bc3c661e56",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ✉️ Envio\nHTML caprichado no e-mail e versão curta no Telegram. Se quiser só um canal, desative o outro nó.\n\nCredenciais: **Gmail account**, **Telegram Bot**",
+        "height": 680,
+        "width": 460
+      },
+      "id": "5a1942ca-c83b-51d1-9d76-11221de54c22",
+      "name": "Nota 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Resumir artigo",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formato da resposta": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Resumir artigo",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Domingo às 9h": {
+      "main": [
+        [
+          {
+            "node": "Configuração",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuração": {
+      "main": [
+        [
+          {
+            "node": "Separar feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separar feeds": {
+      "main": [
+        [
+          {
+            "node": "Ler feed RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler feed RSS": {
+      "main": [
+        [
+          {
+            "node": "Normalizar itens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar itens": {
+      "main": [
+        [
+          {
+            "node": "Só da última semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Só da última semana": {
+      "main": [
+        [
+          {
+            "node": "Remover duplicados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remover duplicados": {
+      "main": [
+        [
+          {
+            "node": "Mais recentes primeiro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mais recentes primeiro": {
+      "main": [
+        [
+          {
+            "node": "Limitar quantidade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limitar quantidade": {
+      "main": [
+        [
+          {
+            "node": "Resumir artigo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumir artigo": {
+      "main": [
+        [
+          {
+            "node": "Juntar resumo e artigo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar resumo e artigo": {
+      "main": [
+        [
+          {
+            "node": "Montar digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar digest": {
+      "main": [
+        [
+          {
+            "node": "Enviar por e-mail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar no Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

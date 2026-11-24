@@ -1,0 +1,295 @@
+{
+  "name": "03 - Lembrete de aniversários",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "c4498963-1f55-5ee0-b56b-840be212c1db",
+      "name": "Todo dia às 9h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "ID_DA_PLANILHA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Aniversarios",
+          "mode": "name"
+        },
+        "options": {
+          "outputFormatting": {
+            "values": {
+              "general": "FORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "id": "6fc01583-7e33-5b9e-bb61-49f09c78dfa0",
+      "name": "Ler planilha de aniversários",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        340
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "credencial-sheets",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a696009-c1c3-5d8f-81a0-f3db9fc0327d",
+              "leftValue": "={{ String($json.data_nascimento ?? '').split('/').slice(0, 2).map(p => p.trim().padStart(2, '0')).join('/') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ $now.plus({ days: 1 }).toFormat('dd/MM') }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ef1bdf59-3cb6-5bbe-bfe8-10eaf9dad954",
+      "name": "Aniversário amanhã?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "645bc72b-6006-52c5-b87d-c9bec3eacf4e",
+              "name": "linha",
+              "value": "={{ (() => {\n  const partes = String($json.data_nascimento).split('/');\n  const ano = parseInt(partes[2]);\n  const idade = ano > 1900 ? ` faz ${$now.plus({ days: 1 }).year - ano} anos` : ' faz aniversário';\n  const nome = String($json.nome).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  const obs = $json.observacao ? `\\n   📝 ${String($json.observacao).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}` : '';\n  return `🎂 <b>${nome}</b>${idade} amanhã (${partes[0].padStart(2, '0')}/${partes[1].padStart(2, '0')})${obs}`;\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "36406997-abd8-5cec-9d8d-0002cbaa412a",
+      "name": "Montar linha",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "linha"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f923bb77-72c0-5499-82e0-5e04ad40a862",
+      "name": "Juntar aniversariantes",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        960,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "SEU_CHAT_ID",
+        "text": "=🎉 <b>Aniversários de amanhã</b>\n\n{{ $json.linha.join('\\n\\n') }}\n\nNão esquece de mandar uma mensagem! 😉",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "f33822bc-84c3-5eed-af5d-6740890a48e4",
+      "name": "Avisar no Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        340
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🎂 Lembrete de aniversários\nTodo dia às 9h confere quem faz aniversário **amanhã** e avisa no Telegram.\n\nSe ninguém faz aniversário, o fluxo para no filtro e nada é enviado.",
+        "height": 460,
+        "width": 260,
+        "color": 4
+      },
+      "id": "c7a2618f-dc73-51f1-85a8-9d6bb8e466c0",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📄 Planilha\nColunas: `nome`, `data_nascimento`, `observacao`\n\n`data_nascimento` no formato **dd/mm/aaaa** (ou **dd/mm** se não souber o ano).\n\n- Troque `ID_DA_PLANILHA`\n- Aba: `Aniversarios`\n\nCredencial: **Google Sheets account**",
+        "height": 460,
+        "width": 240
+      },
+      "id": "9bef3acb-c17c-51eb-8a6d-9e1a98028973",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🔎 Filtro e formatação\nCompara dia/mês com a data de amanhã, calcula a idade (se tiver o ano) e junta tudo numa mensagem só.",
+        "height": 460,
+        "width": 680
+      },
+      "id": "0675b163-1d8d-5f2d-8270-9f1fb19ebbad",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        440,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 📲 Aviso\nTroque `SEU_CHAT_ID`.\n\nCredencial: **Telegram Bot**",
+        "height": 460,
+        "width": 240
+      },
+      "id": "41ac1f95-cb69-5cc8-b35a-b1dd37533af4",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        40
+      ]
+    }
+  ],
+  "connections": {
+    "Todo dia às 9h": {
+      "main": [
+        [
+          {
+            "node": "Ler planilha de aniversários",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ler planilha de aniversários": {
+      "main": [
+        [
+          {
+            "node": "Aniversário amanhã?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aniversário amanhã?": {
+      "main": [
+        [
+          {
+            "node": "Montar linha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Montar linha": {
+      "main": [
+        [
+          {
+            "node": "Juntar aniversariantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar aniversariantes": {
+      "main": [
+        [
+          {
+            "node": "Avisar no Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

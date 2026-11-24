@@ -1,0 +1,395 @@
+{
+  "name": "05 - Triagem de e-mails com IA",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 2,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ]
+        },
+        "options": {}
+      },
+      "id": "b14328b2-a0c4-55a1-9ad8-a9ecd3311826",
+      "name": "Novo e-mail",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        400
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "=Remetente: {{ $json.from?.text }}\nAssunto: {{ $json.subject }}\n\n{{ ($json.text ?? '').slice(0, 2500) }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "urgente",
+              "description": "Precisa da minha ação hoje: prazos curtos, problemas em produção, pedidos diretos e importantes de pessoas reais, alertas de segurança da minha conta."
+            },
+            {
+              "category": "trabalho",
+              "description": "Assuntos profissionais que não são urgentes: reuniões, projetos, colegas, clientes, recrutadores."
+            },
+            {
+              "category": "financeiro",
+              "description": "Boletos, faturas, cobranças, notas fiscais, extratos, comprovantes de pagamento, assinaturas."
+            },
+            {
+              "category": "newsletter",
+              "description": "Newsletters, promoções, marketing, notificações automáticas de serviços e redes sociais."
+            },
+            {
+              "category": "outros",
+              "description": "Qualquer coisa que não se encaixe nas categorias anteriores."
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Você faz a triagem da caixa de entrada de uma pessoa no Brasil. Classifique o e-mail em exatamente uma categoria. Na dúvida entre 'urgente' e outra, só use 'urgente' se houver ação necessária hoje. Golpes e phishing não são urgentes: classifique como 'outros'."
+        }
+      },
+      "id": "5d754b92-9034-5997-b642-02b9bd769bde",
+      "name": "Classificar e-mail",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        400
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-haiku-5-5",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "7a222632-2d72-5831-9cd2-8a315454fe57",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        260,
+        640
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "credencial-anthropic",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Novo e-mail').item.json.id }}",
+        "labelIds": [
+          "ID_ETIQUETA_URGENTE"
+        ]
+      },
+      "id": "ea019786-0472-569b-b3ac-df525e46adcb",
+      "name": "Etiqueta urgente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        40
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Novo e-mail').item.json.id }}",
+        "labelIds": [
+          "ID_ETIQUETA_TRABALHO"
+        ]
+      },
+      "id": "cc5450ce-875c-5614-b7cf-d44905ffd0ac",
+      "name": "Etiqueta trabalho",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Novo e-mail').item.json.id }}",
+        "labelIds": [
+          "ID_ETIQUETA_FINANCEIRO"
+        ]
+      },
+      "id": "916cd8dd-7315-5287-85b4-b09bca63cf2a",
+      "name": "Etiqueta financeiro",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        400
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Novo e-mail').item.json.id }}",
+        "labelIds": [
+          "ID_ETIQUETA_NEWSLETTER"
+        ]
+      },
+      "id": "91245199-24e7-5aeb-bdc8-90d828d6e160",
+      "name": "Etiqueta newsletter",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        580
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Novo e-mail').item.json.id }}",
+        "labelIds": [
+          "ID_ETIQUETA_OUTROS"
+        ]
+      },
+      "id": "9feb1b58-1cb2-53bb-8dd0-0e3baed70b26",
+      "name": "Etiqueta outros",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        760
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "credencial-gmail",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "SEU_CHAT_ID",
+        "text": "=🚨 <b>E-mail urgente</b>\n\n<b>De:</b> {{ String($('Novo e-mail').item.json.from?.text ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}\n<b>Assunto:</b> {{ String($('Novo e-mail').item.json.subject ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}\n\n{{ String($('Novo e-mail').item.json.text ?? '').slice(0, 300).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}\n\n<a href=\"https://mail.google.com/mail/u/0/#all/{{ $('Novo e-mail').item.json.id }}\">Abrir no Gmail</a>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "1f8cf2ff-d8c1-5c91-95d5-32a36dfcbd59",
+      "name": "Avisar urgente no Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        40
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "credencial-telegram",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 Triagem de e-mails com IA\nA cada 2 min pega e-mails novos da caixa de entrada, classifica com um LLM e aplica a etiqueta certa.\n\nCredencial: **Gmail account**",
+        "height": 440,
+        "width": 240,
+        "color": 4
+      },
+      "id": "0fe676cb-dbb1-5478-a7d4-e381923dd2b0",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🧠 Classificador\nNó _Text Classifier_ com 5 categorias (edite as descrições para ajustar ao seu caso).\n\nModelo: **Anthropic account** (`claude-haiku-5-5`, rápido e barato). Para mais precisão, troque o ID por `claude-opus-5-5` no nó do modelo.",
+        "height": 700,
+        "width": 260
+      },
+      "id": "f586ff0b-7d03-5cc6-95ee-f9ac586ff45b",
+      "name": "Nota 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🏷️ Etiquetas\nCrie no Gmail as etiquetas (ex.: `IA/Urgente`, `IA/Trabalho`, `IA/Financeiro`, `IA/Newsletter`, `IA/Outros`) e selecione cada uma no nó correspondente, no lugar de `ID_ETIQUETA_*`.",
+        "height": 1060,
+        "width": 240
+      },
+      "id": "a69d492c-30d1-5778-aa60-db507e1ac23a",
+      "name": "Nota 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🚨 Urgente\nAlém da etiqueta, manda alerta no Telegram. Troque `SEU_CHAT_ID`.\n\nCredencial: **Telegram Bot**",
+        "height": 340,
+        "width": 240
+      },
+      "id": "f005564f-3ecd-59ac-b93c-9b81b745aca7",
+      "name": "Nota 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        820,
+        -120
+      ]
+    }
+  ],
+  "connections": {
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classificar e-mail",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Novo e-mail": {
+      "main": [
+        [
+          {
+            "node": "Classificar e-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classificar e-mail": {
+      "main": [
+        [
+          {
+            "node": "Etiqueta urgente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Etiqueta trabalho",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Etiqueta financeiro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Etiqueta newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Etiqueta outros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Etiqueta urgente": {
+      "main": [
+        [
+          {
+            "node": "Avisar urgente no Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
